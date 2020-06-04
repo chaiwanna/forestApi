@@ -86,8 +86,8 @@ module.exports = app => {
 
   app
     .route('/:roleType(user|staff)')
-    .get([ checkSchema(user.userListGet)], userController.listUsers)
-    .post([],userController.postUser);
+    .get([checkSchema(user.userListGet)], userController.listUsers)
+    .post([], userController.postUser);
 
   app
     .route('/:roleType(user|staff)/:id')
@@ -95,24 +95,16 @@ module.exports = app => {
     .patch([isAuthenticated, checkSchema(user.userPatch)], userController.patchUser)
     .delete([isAuthenticated, checkSchema(user.userDelete)], userController.deleteUser);
 
+  // custom api
 
-  //country route
-  // router.use('/country', country);
+  //register
+  app
+    .route('/getregisterforest')
+    .get([], registerforestController.getregisterforest)
+    .post([], registerforestController.insertRegisterforest);
 
-  app
-  .route('/getregisterforest')
-  .get([],registerforestController.getregisterforest)
-  .post([],registerforestController.insertRegisterforest);
-
-
-  app
-  .route('/country/provinces')
-  .get([],countryController.provinces);
-  app
-  .route('/country/districts/:id')
-  .get([],countryController.districts);
-  app
-  .route('/country/subdistricts/:id')
-  .get([],countryController.subdistricts);
-  
+  // address
+  app.route('/country/provinces').get([], countryController.provinces);
+  app.route('/country/districts/:id').get([], countryController.districts);
+  app.route('/country/subdistricts/:id').get([], countryController.subdistricts);
 };

@@ -5,35 +5,28 @@ const { logger } = require('../helpers/logger');
 const moduleLogger = logger.child({ module: 'userModel' });
 
 const onRegisterforest = async row => {
-    let result = false;
-    try {
-        result = await (await getPool()).query(
-            `
+  let result = false;
+  try {
+    result = await (await getPool()).query(
+      `
             SELECT * FROM FOREST_DETAIL
-                `,
-        )
-    } catch (e) {
-        //moduleLogger.error(e);
-        throw e;
-    }
-    // //moduleLogger.debug({ result }, 'Inserted user result');
-    // c÷onsole.log(result);
+                `
+    );
+  } catch (e) {
+    throw e;
+  }
 
-    return {
-        result: true,
-        data: result
-    };
+  return {
+    result: true,
+    data: result
+  };
 };
 
 const postRegisterforest = async row => {
-
-    let result = false;
-    // If password is provided, then hash it
-
-  
-    try {
-      result = await (await getPool()).query(
-        `
+  let result = false;
+  try {
+    result = await (await getPool()).query(
+      `
           INSERT INTO FOREST_ACCESS (
             USER_IDUSER,
             OBJECTIVE,
@@ -46,24 +39,16 @@ const postRegisterforest = async row => {
             ?
           );
         `,
-        [
-          row.USER_IDUSER,
-          row.OBJECTIVE,
-          row.OTHER,
-          row.FOREST_DETAIL_ID
-        ]
-      );
-    } catch (e) {
-      //moduleLogger.error(e);
-      throw e;
-    }
-  
-    //moduleLogger.debug({ result }, 'Inserted user result');
-  
-    return {
-      result: true,
-      id: result.insertId
-    };
-  };
+      [row.USER_IDUSER, row.OBJECTIVE, row.OTHER, row.FOREST_DETAIL_ID]
+    );
+  } catch (e) {
+    throw e;
+  }
 
-module.exports = { onRegisterforest,postRegisterforest};
+  return {
+    result: true,
+    id: result.insertId
+  };
+};
+
+module.exports = { onRegisterforest, postRegisterforest };
