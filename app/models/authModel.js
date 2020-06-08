@@ -40,7 +40,10 @@ const processLogin = async (user, { ipAddress }) => {
   //moduleLogger.debug(newUser, 'Updating user information with ');
   await userModel.updateOne(user.id, newUser);
 
-  return { auth_key: jwtToken };
+  return {
+    auth_key: jwtToken,
+    role: user.role
+  };
 };
 
 const login = async (username, password, roles = [userModel.userRole.user], { ipAddress = '' } = {}) => {
