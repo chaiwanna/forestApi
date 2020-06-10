@@ -9,6 +9,7 @@ const permissionController = require('../controllers/permissionController');
 const settingController = require('../controllers/settingController');
 const todoController = require('../controllers/todoController');
 const userController = require('../controllers/userController');
+const newUserController = require('../controllers/newUserController');
 const forestDetailController = require('../controllers/forestDetailController');
 const forestAccessController = require('../controllers/forestAccessController');
 const countryController = require('../controllers/countryController');
@@ -106,8 +107,10 @@ module.exports = app => {
 
   app.route('/forest_access').get([], forestAccessController.getAll).post([], forestAccessController.getDataPaginate);
 
-  app.route('/report/dash_board').get([], reportController.getDashboard);
+  app.route('/user_new').get([], newUserController.getAll);
 
+  app.route('/report/dash_board').get([], reportController.getDashboard);
+  app.route('/report/get_graph').post([], reportController.getGraph);
   app.route('/report/create_excel').get([], reportController.createExcel);
   //register
   app

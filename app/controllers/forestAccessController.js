@@ -35,22 +35,13 @@ const insert = async (req, res) => {
 
 const getDataPaginate = async (req, res) => {
   try {
-    var data = await model.getAll();
-    // add relation data
-    for (const key in data) {
-      let userId = await userModelQuery.getById(data[key].user_id);
-      data[key].user = userId ? userId : null;
-
-      let fDetail = await forestDetailModelQuery.getById(data[key].forest_detail_id);
-      data[key].forest_detail = fDetail ? fDetail : null;
-    }
-
+    const returnData = await getPaginateData(req);
     let paginateData = {
       page: 1,
       per_page: 10,
-      total: data.length,
+      total: returnData.length,
       total_pages: 1,
-      data: data
+      data: returnData
     };
 
     return handleSuccess(res, '', paginateData);
@@ -59,9 +50,50 @@ const getDataPaginate = async (req, res) => {
   }
 };
 
+async function getPaginateData(req) {
+  const filter = req.body;
+  let condition = '';
+  if (filter.filter && filter.filter.date_from) {
+    condition += ` where time >= '${filter.filter.date_from}'`;
+    delete filter.filter.date_from;
+  }
+  if (filter.filter && filter.filter.date_too) {
+    condition += ` and time <= '${filter.filter.date_too}'`;
+    delete filter.filter.date_too;
+  }
+
+  var data = await model.customQuery(['*'], condition);
+  // add relation data
+  for (const key in data) {
+    let userId = await userModelQuery.getById(data[key].user_id);
+    data[key].user = userId ? userId : null;
+
+    let fDetail = await forestDetailModelQuery.getById(data[key].forest_detail_id);
+    data[key].forest_detail = fDetail ? fDetail : null;
+  }
+  if (filter.filter) {
+    let returnData = [];
+    for (const iterator of data) {
+      let isFilter = true;
+      for (const [key, value] of Object.entries(filter.filter)) {
+        if (parseInt(iterator[key]) != parseInt(value)) {
+          isFilter = false;
+          break;
+        }
+      }
+      if (isFilter) {
+        returnData.push(iterator);
+      }
+    }
+    return returnData;
+  }
+  return data;
+}
+
 module.exports = {
   getAll,
   getById,
   insert,
-  getDataPaginate
+  getDataPaginate,
+  getPaginateData
 };

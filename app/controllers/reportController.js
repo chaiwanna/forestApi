@@ -4,6 +4,7 @@ const { forestDetailModel } = require('../models/forestDetailModel');
 const { forestAccessModel } = require('../models/forestAccessModel');
 const { validateRequest, handleCustomValidationError, handleNotFound, handleSuccess } = require('../helpers/response');
 const xl = require('excel4node');
+const { getPaginateData } = require('../controllers/forestAccessController');
 
 const fDetailModel = new forestDetailModel();
 const fAacessModel = new forestAccessModel();
@@ -26,16 +27,37 @@ const getDashboard = async (req, res) => {
 
 const createExcel = async (req, res) => {
   try {
+    let filter = JSON.parse(req.query.param);
+    const returnData = await getPaginateData({ body: filter });
+
     var wb = new xl.Workbook();
     var ws = wb.addWorksheet('รายงาน');
-    const head = ['h1', 'h2'];
-    const data = [
-      ['a', 'b'],
-      ['c', 'd']
+    const head = [
+      'ชื่อ-นามสกุล',
+      'เลขประจำตัวประชาชน',
+      'ที่อยู่	',
+      'วัตถุประสงค์ในการเข้าไปในพื้นที่ป่า	',
+      'วันที่เข้าป่า'
     ];
+    const data = [];
+    // prepare data
+    returnData.forEach(element => {
+      let array = [
+        `${element.user[0].first_name} ${element.user[0].last_name}`,
+        `${element.user[0].numreg}`,
+        '',
+        `${element.objective}`,
+        `${element.time}`
+      ];
+
+      data.push(array);
+    });
+
+    // add head
     for (const col in head) {
-      ws.cell(1, parseInt(col) + 1).string(data[col]);
+      ws.cell(1, parseInt(col) + 1).string(head[col]);
     }
+    // add body
     for (const row in data) {
       for (const col in data[row]) {
         ws.cell(parseInt(row) + 2, parseInt(col) + 1).string(data[row][col]);
@@ -43,23 +65,39 @@ const createExcel = async (req, res) => {
     }
 
     wb.write('report.xlsx', res);
-    // return handleSuccess(res, '', $data);
   } catch (ex) {
     return handleNotFound(res, ex);
   }
 };
 
-// function addRows(ws, data) {
-//     console.log(ws);
+const getGraph = async (req, res) => {
+  try {
+    const filter = req.body;
+    condition = '';
+    if (filter.filter && filter.filter.date_from) {
+      condition += ` where time >= '${filter.filter.date_from}' `;
+      delete filter.filter.date_from;
+    }
+    if (filter.filter && filter.filter.date_too) {
+      condition += ` and time <= '${filter.filter.date_too}' `;
+      delete filter.filter.date_too;
+    }
+    condition +=
+      'GROUP BY YEAR(forest_access.time) , MONTH(forest_access.time) , DAY(forest_access.time) ORDER BY `time`';
 
-//     for (const row in data) {
-//         for (const col in data[row]) {
-//             ws.cell(row, col).string(data[row][col]);
-//         }
-//     }
-// }
+    $report2 = await fAacessModel.customQuery(
+      ["DATE_FORMAT(forest_access.time ,'%d-%m-%Y') AS `time`", 'COUNT(forest_access.user_id) AS `count` '],
+      condition
+    );
+
+    return handleSuccess(res, '', $report2);
+  } catch (ex) {
+    return handleNotFound(res, ex);
+  }
+};
 
 module.exports = {
   getDashboard,
-  createExcel
+  createExcel,
+  getGraph
 };
