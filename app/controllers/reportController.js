@@ -73,14 +73,19 @@ const createExcel = async (req, res) => {
 const getGraph = async (req, res) => {
   try {
     const filter = req.body;
-    condition = '';
+    condition = 'where 1 ';
     if (filter.filter && filter.filter.date_from) {
-      condition += ` where time >= '${filter.filter.date_from}' `;
+      condition += ` and time >= '${filter.filter.date_from}' `;
       delete filter.filter.date_from;
     }
     if (filter.filter && filter.filter.date_too) {
       condition += ` and time <= '${filter.filter.date_too}' `;
       delete filter.filter.date_too;
+    }
+    if (filter.filter) {
+      for (const [key, value] of Object.entries(filter.filter)) {
+        condition += ` and ${key} = '${value}' `;
+      }
     }
     condition +=
       'GROUP BY YEAR(forest_access.time) , MONTH(forest_access.time) , DAY(forest_access.time) ORDER BY `time`';
@@ -96,8 +101,43 @@ const getGraph = async (req, res) => {
   }
 };
 
+const getMapDetail = async (req, res) => {
+  try {
+    const filter = req.body;
+    condition = '';
+
+    if (filter.filter && filter.filter.user_id) {
+      condition = `WHERE user_id ='${filter.filter.user_id}'`;
+    }
+    condition = `left JOIN (SELECT * FROM forest_access ${condition}) AS forest_access ON forest_access.forest_detail_id = forest_detail.id where 1 `;
+    if (filter.filter && filter.filter.date_from) {
+      condition += ` and time >= '${filter.filter.date_from}' `;
+      delete filter.filter.date_from;
+    }
+    if (filter.filter && filter.filter.date_too) {
+      condition += ` and time <= '${filter.filter.date_too}' `;
+      delete filter.filter.date_too;
+    }
+    // if (filter.filter) {
+    //     for (const [key, value] of Object.entries(filter.filter)) {
+    //         condition += ` and ${key} = '${value}' `;
+    //     }
+    // }
+    condition += 'GROUP BY forest_detail.id';
+    $report2 = await fDetailModel.customQuery(
+      ['COUNT(forest_access.user_id) as `count`', 'forest_detail.*'],
+      condition
+    );
+
+    return handleSuccess(res, '', $report2);
+  } catch (ex) {
+    return handleNotFound(res, ex);
+  }
+};
+
 module.exports = {
   getDashboard,
   createExcel,
-  getGraph
+  getGraph,
+  getMapDetail
 };
