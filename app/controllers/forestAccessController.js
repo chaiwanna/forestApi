@@ -33,6 +33,14 @@ const insert = async (req, res) => {
   }
 };
 
+const deleteById = async (req, res) => {
+  try {
+    return handleSuccess(res, '', await model.delete(req.params.id));
+  } catch (ex) {
+    return handleNotFound(res, ex);
+  }
+};
+
 const getDataPaginate = async (req, res) => {
   try {
     const returnData = await getPaginateData(req);
@@ -52,16 +60,16 @@ const getDataPaginate = async (req, res) => {
 
 async function getPaginateData(req) {
   const filter = req.body;
-  let condition = '';
+  let condition = 'where 1';
   if (filter.filter && filter.filter.date_from) {
-    condition += ` where time >= '${filter.filter.date_from}'`;
+    condition += ` and time >= '${filter.filter.date_from}'`;
     delete filter.filter.date_from;
   }
   if (filter.filter && filter.filter.date_too) {
     condition += ` and time <= '${filter.filter.date_too}'`;
     delete filter.filter.date_too;
   }
-
+  condition += ` order by time desc`;
   var data = await model.customQuery(['*'], condition);
   // add relation data
   for (const key in data) {
@@ -95,5 +103,6 @@ module.exports = {
   getById,
   insert,
   getDataPaginate,
-  getPaginateData
+  getPaginateData,
+  deleteById
 };

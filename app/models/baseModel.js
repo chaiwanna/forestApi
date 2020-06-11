@@ -56,9 +56,17 @@ class baseModel {
 
   // }
 
-  // async delete(id) {
+  async delete(id) {
+    let result;
+    let query = `DELETE FROM ${this.table_name} WHERE id = ${id}`;
+    try {
+      result = await (await getPool()).query(query);
+    } catch (e) {
+      throw e;
+    }
 
-  // }
+    return result;
+  }
   async customQuery(select, condition) {
     let result;
     let query = `SELECT ${select.join()} FROM ${this.table_name} ${condition}`;

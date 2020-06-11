@@ -107,6 +107,8 @@ module.exports = app => {
 
   app.route('/forest_access').get([], forestAccessController.getAll).post([], forestAccessController.getDataPaginate);
 
+  app.route('/forest_access/:id').delete([], forestAccessController.deleteById);
+
   app.route('/user_new').get([], newUserController.getAll);
 
   app.route('/report/dash_board').get([], reportController.getDashboard);
