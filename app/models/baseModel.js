@@ -70,8 +70,6 @@ class baseModel {
   async customQuery(select, condition) {
     let result;
     let query = `SELECT ${select.join()} FROM ${this.table_name} ${condition}`;
-    console.log(query);
-
     try {
       result = await (await getPool()).query(query);
     } catch (e) {

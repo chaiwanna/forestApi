@@ -59,10 +59,14 @@ const createExcel = async (req, res) => {
     const data = [];
     // prepare data
     returnData.forEach(element => {
+      let address = 'ไม่มีข้อมูล';
+      if (element.user.province_data && element.user.district_data && element.user.subdistrict_data) {
+        address = `เลขที่ ${element.user.numhome} หมู่ ${element.user.nummoo} ${element.user.province_data.name_in_thai} ${element.user.district_data.name_in_thai} ${element.user.subdistrict_data.name_in_thai} ${element.user.subdistrict_data.zip_code}`;
+      }
       let array = [
-        `${element.user[0].first_name} ${element.user[0].last_name}`,
-        `${element.user[0].numreg}`,
-        '',
+        `${element.user.first_name} ${element.user.last_name}`,
+        `${element.user.numreg}`,
+        address,
         `${element.objective}`,
         `${element.time}`
       ];
