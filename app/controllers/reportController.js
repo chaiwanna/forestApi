@@ -5,6 +5,7 @@ const { forestAccessModel } = require('../models/forestAccessModel');
 const { validateRequest, handleCustomValidationError, handleNotFound, handleSuccess } = require('../helpers/response');
 const xl = require('excel4node');
 const { getPaginateData } = require('../controllers/forestAccessController');
+const moment = require('moment');
 
 const fDetailModel = new forestDetailModel();
 const fAacessModel = new forestAccessModel();
@@ -63,12 +64,14 @@ const createExcel = async (req, res) => {
       if (element.user.province_data && element.user.district_data && element.user.subdistrict_data) {
         address = `เลขที่ ${element.user.numhome} หมู่ ${element.user.nummoo} ${element.user.province_data.name_in_thai} ${element.user.district_data.name_in_thai} ${element.user.subdistrict_data.name_in_thai} ${element.user.subdistrict_data.zip_code}`;
       }
+      let time = moment(String(element.time)).format('DD/MM/YYYY HH:mm');
+
       let array = [
         `${element.user.first_name} ${element.user.last_name}`,
         `${element.user.numreg}`,
         address,
-        `${element.objective}`,
-        `${element.time}`
+        `${element.objective} ${element.other ? element.other : ''}`,
+        `${time}`
       ];
 
       data.push(array);
@@ -138,6 +141,9 @@ const getMapDetail = async (req, res) => {
     if (filter.filter && filter.filter.date_too) {
       condition += ` and time <= '${filter.filter.date_too}' `;
       delete filter.filter.date_too;
+    }
+    if (filter.filter && filter.filter.id) {
+      condition += ` and forest_detail.id ='${filter.filter.id}'`;
     }
     // if (filter.filter) {
     //     for (const [key, value] of Object.entries(filter.filter)) {

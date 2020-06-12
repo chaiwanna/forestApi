@@ -98,6 +98,37 @@ const login = async (username, password, roles = [userModel.userRole.user], { ip
   return result;
 };
 
+const loginWithHash = async (username, password, roles = [userModel.userRole.user], { ipAddress = '' } = {}) => {
+  const user = await userModel.loginWithHashPassword({
+    username: username,
+    password: password
+  });
+
+  if (user === false) {
+    //moduleLogger.debug('User not found.');
+    throw new Error('Your username or password is incorrect.');
+  }
+
+  if (user.blocked_at !== null && user.blocked_at !== '') {
+    //moduleLogger.debug('User is blocked to login.');
+    throw new Error('You are not allowed to login.');
+  }
+
+  if (user.confirmed_at === null || user.confirmed_at === '') {
+    //moduleLogger.debug('User is not confirmed yet.');
+    throw new Error('Your email is not verified. Please verify your email and try again.');
+  }
+
+  let result = {};
+  try {
+    result = await processLogin(user, { ipAddress });
+  } catch (e) {
+    throw new Error('There was a problem while processing login request. Please try again.');
+  }
+
+  return result;
+};
+
 const register = async (
   { username, password, firstName, lastName, email, registrationIp, role, status },
   { apiURL }
@@ -192,4 +223,4 @@ const passwordReset = async ({ password, passwordResetToken }) => {
   return result;
 };
 
-module.exports = { login, register, registerConfirm, passwordResetRequest, passwordReset };
+module.exports = { login, register, registerConfirm, passwordResetRequest, passwordReset, loginWithHash };

@@ -47,6 +47,7 @@ module.exports = app => {
     .get([isAuthenticated, checkSchema(permission.permissionListGet)], permissionController.listPermissions);
 
   app.route('/:roleType(user|staff)/login').post([checkSchema(auth.authLoginPost)], authController.login);
+  app.route('/:roleType(user|staff)/loginHash').post([checkSchema(auth.authLoginPost)], authController.loginWithHash);
   app.route('/:roleType(user)/register').post([checkSchema(auth.authRegisterPost)], authController.register);
   app
     .route('/:roleType(user)/register-confirm')
