@@ -156,7 +156,6 @@ const findAll = async ({
  * Insert new user
  */
 const insertOne = async row => {
-
   let result = false;
   let passwordHash = null;
   // If password is provided, then hash it
@@ -473,4 +472,33 @@ const getUserRoles = roleType => {
   return roleType === 'staff' ? [userRole.administrator, userRole.staff] : [userRole.user];
 };
 
-module.exports = { findAll, insertOne, getOne, updateOne, deleteOne, userRole, userStatus, userEnabled, getUserRoles };
+const loginWithHashPassword = async row => {
+  let result = false;
+  try {
+    result = await (await getPool()).query(
+      `
+        SELECT * FROM user WHERE username = ? and password_hash = ?
+      `,
+      [row.username, row.password]
+    );
+  } catch (e) {
+    throw e;
+  }
+  if (result) {
+    return result[0];
+  }
+  return false;
+};
+
+module.exports = {
+  findAll,
+  insertOne,
+  getOne,
+  updateOne,
+  deleteOne,
+  userRole,
+  userStatus,
+  userEnabled,
+  getUserRoles,
+  loginWithHashPassword
+};

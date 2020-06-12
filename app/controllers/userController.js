@@ -58,6 +58,7 @@ const getUser = async (req, res) => {
       id: req.params.id,
       roles: userModel.getUserRoles(req.params.roleType)
     },
+    includePasswordHash: true,
     includePermissions: req.params.roleType === 'staff'
   });
 
@@ -75,7 +76,7 @@ const getUser = async (req, res) => {
 const postUser = async (req, res) => {
   // Validate request
   // const validationRequest = await validateRequest(req, res, {
-  //   permissionKey:  'manageStaff' 
+  //   permissionKey:  'manageStaff'
   // }).catch(err=>{console.log(err);
   // });
 
@@ -89,8 +90,7 @@ const postUser = async (req, res) => {
   //   includeOptionals: true,
   //   onlyValidData: true,
   // });
-  let params = req.body
-  
+  let params = req.body;
 
   let permissionIds = [];
   // If user role is staff and permissions field is defined,
@@ -149,7 +149,7 @@ const patchUser = async (req, res) => {
   //   includeOptionals: true,
   //   onlyValidData: true
   // });
-  let params = req.body
+  let params = req.body;
   let permissionIds = [];
   // If user role is staff and permissions field is defined,
   // then get permissions to separated array and remove from parameters.
