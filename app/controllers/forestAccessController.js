@@ -152,11 +152,20 @@ async function getPaginateData(req) {
   return data;
 }
 
+const updateById = async (req, res) => {
+  try {
+    return handleSuccess(res, 'success', await model.update(req.params.id, req.body));
+  } catch (ex) {
+    return handleNotFound(res, ex);
+  }
+};
+
 module.exports = {
   getAll,
   getById,
   insert,
   getDataPaginate,
   getPaginateData,
-  deleteById
+  deleteById,
+  updateById
 };

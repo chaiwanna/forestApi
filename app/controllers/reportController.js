@@ -23,7 +23,7 @@ const getDashboard = async (req, res) => {
     $report2 = $report2.length;
 
     $report3 = await fDetailModel.customQuery(
-      ['IFNULL(a.count,0) as count', 'forest_detail.name'],
+      ['IFNULL(a.count,0) as count', 'forest_detail.name', 'forest_detail.id'],
       `LEFT JOIN (SELECT COUNT(DISTINCT(forest_access.user_id)) AS  'count', forest_detail.name , forest_detail.id FROM forest_detail
             left JOIN forest_access ON forest_detail.id = forest_access.forest_detail_id
             WHERE YEAR(forest_access.time) = '${d.getFullYear()}' AND MONTH(forest_access.time) = '${
