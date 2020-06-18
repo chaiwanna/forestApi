@@ -115,6 +115,9 @@ module.exports = app => {
 
   app.route('/report/dash_board').get([], reportController.getDashboard);
   app.route('/report/get_graph').post([], reportController.getGraph);
+  app.route('/report/get_graph/excel').get([], reportController.getGraphDownloadExcel);
+  app.route('/report/get_graph_obj').post([], reportController.getReportObj);
+  app.route('/report/get_graph_obj/excel').get([], reportController.getReportObjDownloadExcel);
   app.route('/report/create_excel').get([], reportController.createExcel);
   app.route('/report/get_map_detail').post([], reportController.getMapDetail);
   //register

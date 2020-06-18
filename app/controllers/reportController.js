@@ -45,7 +45,10 @@ const getDashboard = async (req, res) => {
 
 const createExcel = async (req, res) => {
   try {
-    let filter = JSON.parse(req.query.param);
+    let filter = {};
+    if (req.query && req.query.param) {
+      filter = JSON.parse(req.query.param);
+    }
     const returnData = await getPaginateData({ body: filter });
 
     var wb = new xl.Workbook();
@@ -96,31 +99,140 @@ const createExcel = async (req, res) => {
 
 const getGraph = async (req, res) => {
   try {
-    const filter = req.body;
-    condition = 'where 1 ';
-    if (filter.filter && filter.filter.date_from) {
-      condition += ` and time >= '${filter.filter.date_from}' `;
-      delete filter.filter.date_from;
-    }
-    if (filter.filter && filter.filter.date_too) {
-      condition += ` and time <= '${filter.filter.date_too}' `;
-      delete filter.filter.date_too;
-    }
-    if (filter.filter) {
-      for (const [key, value] of Object.entries(filter.filter)) {
-        condition += ` and ${key} = '${value}' `;
-      }
-    }
-    condition +=
-      'GROUP BY  YEAR(forest_access.time) , MONTH(forest_access.time) , DAY(forest_access.time) ORDER BY `time` desc';
-
-    $report2 = await fAacessModel.customQuery(
-      ["DATE_FORMAT(forest_access.time ,'%d-%m-%Y') AS `time`", 'COUNT(DISTINCT(forest_access.user_id)) AS `count` '],
-      condition
-    );
-
+    $report2 = await getForestAccessModelData(req);
     return handleSuccess(res, '', $report2);
   } catch (ex) {
+    return handleNotFound(res, ex);
+  }
+};
+const getGraphDownloadExcel = async (req, res) => {
+  try {
+    let filter = {};
+    if (req.query && req.query.param) {
+      filter = JSON.parse(req.query.param);
+    }
+    $report2 = await getForestAccessModelData({ body: filter });
+    var wb = new xl.Workbook();
+    var ws = wb.addWorksheet('รายงาน');
+    const head = ['วันที่', 'จำนวนคนเข้าใช้งาน'];
+    const data = [];
+    // prepare data
+    $report2.forEach(element => {
+      let array = [`${element.time}`, `${element.count}`];
+
+      data.push(array);
+    });
+
+    // add head
+    for (const col in head) {
+      ws.cell(1, parseInt(col) + 1).string(head[col]);
+    }
+    // add body
+    for (const row in data) {
+      for (const col in data[row]) {
+        ws.cell(parseInt(row) + 2, parseInt(col) + 1).string(data[row][col]);
+      }
+    }
+
+    wb.write('report.xlsx', res);
+  } catch (ex) {
+    return handleNotFound(res, ex);
+  }
+};
+const getReportObj = async (req, res) => {
+  try {
+    $report2 = await getObjModelData(req);
+
+    if (!$report2) {
+      return handleSuccess(res, '', $report2);
+    }
+    data = [];
+    $report2.forEach(element => {
+      let obj = element.objective;
+      obj = obj.split(',');
+      obj.forEach(ele => {
+        if (data.findIndex(x => x.name == ele) < 0) {
+          data.push({ name: ele, count: 0 });
+        }
+        data[data.findIndex(x => x.name == ele)].count += 1;
+      });
+    });
+
+    function compare(a, b) {
+      if (a.count > b.count) {
+        return -1;
+      }
+      if (a.count < b.count) {
+        return 1;
+      }
+      return 0;
+    }
+    data.sort(compare);
+    return handleSuccess(res, '', data);
+  } catch (ex) {
+    return handleNotFound(res, ex);
+  }
+};
+const getReportObjDownloadExcel = async (req, res) => {
+  try {
+    let filter = {};
+    if (req.query && req.query.param) {
+      filter = JSON.parse(req.query.param);
+    }
+    $report2 = await getObjModelData({ body: filter });
+
+    if (!$report2) {
+      return handleSuccess(res, '', $report2);
+    }
+    data = [];
+    $report2.forEach(element => {
+      let obj = element.objective;
+      obj = obj.split(',');
+      obj.forEach(ele => {
+        if (data.findIndex(x => x.name == ele) < 0) {
+          data.push({ name: ele, count: 0 });
+        }
+        data[data.findIndex(x => x.name == ele)].count += 1;
+      });
+    });
+
+    function compare(a, b) {
+      if (a.count > b.count) {
+        return -1;
+      }
+      if (a.count < b.count) {
+        return 1;
+      }
+      return 0;
+    }
+    data.sort(compare);
+
+    var wb = new xl.Workbook();
+    var ws = wb.addWorksheet('รายงาน');
+    const head = ['วัตถุประสงค์', 'จำนวนคนเข้าใช้งาน'];
+    const excelData = [];
+    // prepare data
+    data.forEach(element => {
+      let array = [`${element.name == '' || null ? 'ไม่พบข้อมูล' : element.name}`, `${element.count}`];
+
+      excelData.push(array);
+    });
+
+    // add head
+    for (const col in head) {
+      ws.cell(1, parseInt(col) + 1).string(head[col]);
+    }
+    // add body
+    for (const row in excelData) {
+      for (const col in excelData[row]) {
+        ws.cell(parseInt(row) + 2, parseInt(col) + 1).string(excelData[row][col]);
+      }
+    }
+
+    wb.write('report.xlsx', res);
+  } catch (ex) {
+    console.log(ex);
+
     return handleNotFound(res, ex);
   }
 };
@@ -162,9 +274,59 @@ const getMapDetail = async (req, res) => {
   }
 };
 
+async function getForestAccessModelData(req) {
+  const filter = req.body;
+  condition = 'where 1 ';
+  if (filter.filter && filter.filter.date_from) {
+    condition += ` and time >= '${filter.filter.date_from}' `;
+    delete filter.filter.date_from;
+  }
+  if (filter.filter && filter.filter.date_too) {
+    condition += ` and time <= '${filter.filter.date_too}' `;
+    delete filter.filter.date_too;
+  }
+  if (filter.filter) {
+    for (const [key, value] of Object.entries(filter.filter)) {
+      condition += ` and ${key} = '${value}' `;
+    }
+  }
+  condition +=
+    'GROUP BY  YEAR(forest_access.time) , MONTH(forest_access.time) , DAY(forest_access.time) ORDER BY `time` desc';
+
+  $report2 = await fAacessModel.customQuery(
+    ["DATE_FORMAT(forest_access.time ,'%d-%m-%Y') AS `time`", 'COUNT(DISTINCT(forest_access.user_id)) AS `count` '],
+    condition
+  );
+  return $report2;
+}
+
+async function getObjModelData(req) {
+  const filter = req.body;
+  condition = 'where 1 ';
+  if (filter.filter && filter.filter.date_from) {
+    condition += ` and time >= '${filter.filter.date_from}' `;
+    delete filter.filter.date_from;
+  }
+  if (filter.filter && filter.filter.date_too) {
+    condition += ` and time <= '${filter.filter.date_too}' `;
+    delete filter.filter.date_too;
+  }
+  if (filter.filter) {
+    for (const [key, value] of Object.entries(filter.filter)) {
+      condition += ` and ${key} = '${value}' `;
+    }
+  }
+
+  $report2 = await fAacessModel.customQuery(['*'], condition);
+  return $report2;
+}
+
 module.exports = {
   getDashboard,
   createExcel,
   getGraph,
-  getMapDetail
+  getMapDetail,
+  getReportObj,
+  getGraphDownloadExcel,
+  getReportObjDownloadExcel
 };
