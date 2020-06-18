@@ -22,6 +22,27 @@ const getDashboard = async (req, res) => {
     );
     $report2 = $report2.length;
 
+    let filter = {};
+    if (req.query && req.query.param) {
+      filter = JSON.parse(req.query.param);
+    }
+    filter = { body: filter };
+    filter = filter.body;
+    condition = 'where 1 ';
+    if (filter.filter && filter.filter.date_from) {
+      condition += ` and time >= '${filter.filter.date_from}' `;
+      delete filter.filter.date_from;
+    }
+    if (filter.filter && filter.filter.date_too) {
+      condition += ` and time <= '${filter.filter.date_too}' `;
+      delete filter.filter.date_too;
+    }
+    if (filter.filter) {
+      for (const [key, value] of Object.entries(filter.filter)) {
+        condition += ` and ${key} = '${value}' `;
+      }
+    }
+    condition += 'order by count desc';
     $report3 = await fDetailModel.customQuery(
       ['IFNULL(a.count,0) as count', 'forest_detail.name', 'forest_detail.id'],
       `LEFT JOIN (SELECT COUNT(DISTINCT(forest_access.user_id)) AS  'count', forest_detail.name , forest_detail.id FROM forest_detail
@@ -29,7 +50,7 @@ const getDashboard = async (req, res) => {
             WHERE YEAR(forest_access.time) = '${d.getFullYear()}' AND MONTH(forest_access.time) = '${
         d.getMonth() + 1
       }' AND  DAY(forest_access.time) = '${d.getDate()}'
-            GROUP BY forest_detail.id) AS a ON a.id = forest_detail.id order by count desc`
+            GROUP BY forest_detail.id) AS a ON a.id = forest_detail.id ${condition}`
     );
 
     $data = {
@@ -294,7 +315,7 @@ async function getForestAccessModelData(req) {
     'GROUP BY  YEAR(forest_access.time) , MONTH(forest_access.time) , DAY(forest_access.time) ORDER BY `time` desc';
 
   $report2 = await fAacessModel.customQuery(
-    ["DATE_FORMAT(forest_access.time ,'%d-%m-%Y') AS `time`", 'COUNT(DISTINCT(forest_access.user_id)) AS `count` '],
+    ["DATE_FORMAT(forest_access.time ,'%d-%m-%Y') AS `time`", 'COUNT(forest_access.user_id) AS `count` '],
     condition
   );
   return $report2;
