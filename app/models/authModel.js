@@ -60,7 +60,7 @@ const login = async (username, password, roles = [userModel.userRole.user], { ip
 
   if (user.length === 0) {
     //moduleLogger.debug('User not found.');
-    throw new Error('Your username or password is incorrect.');
+    throw new Error('โปรดกรอกชื่อผู้ใช้งาน หรือ รหัสผ่านให้ถูกต้อง');
   }
 
   if (user.blocked_at !== null && user.blocked_at !== '') {
@@ -68,10 +68,10 @@ const login = async (username, password, roles = [userModel.userRole.user], { ip
     throw new Error('You are not allowed to login.');
   }
 
-  if (user.confirmed_at === null || user.confirmed_at === '') {
-    //moduleLogger.debug('User is not confirmed yet.');
-    throw new Error('Your email is not verified. Please verify your email and try again.');
-  }
+  // if (user.confirmed_at === null || user.confirmed_at === '') {
+  //   //moduleLogger.debug('User is not confirmed yet.');
+  //   throw new Error('Your email is not verified. Please verify your email and try again.');
+  // }
 
   if (bcrypt.compareSync(password, user.password_hash) === false) {
     //moduleLogger.debug('Incorrect password.');
@@ -114,10 +114,10 @@ const loginWithHash = async (username, password, roles = [userModel.userRole.use
     throw new Error('You are not allowed to login.');
   }
 
-  if (user.confirmed_at === null || user.confirmed_at === '') {
-    //moduleLogger.debug('User is not confirmed yet.');
-    throw new Error('Your email is not verified. Please verify your email and try again.');
-  }
+  // if (user.confirmed_at === null || user.confirmed_at === '') {
+  //   //moduleLogger.debug('User is not confirmed yet.');
+  //   throw new Error('Your email is not verified. Please verify your email and try again.');
+  // }
 
   let result = {};
   try {

@@ -28,7 +28,7 @@ const login = async (req, res) => {
       ipAddress: getIPAddress(req)
     });
 
-    return handleSuccess(res, 'You are successfully logged in.', result);
+    return handleSuccess(res, 'เข้าสู่ระบบสำเร็จ', result);
   } catch (e) {
     //moduleLogger.error({ e }, 'Login failed');
     return handleCustomValidationError(res, [
