@@ -28,7 +28,7 @@ const postRegisterforest = async row => {
     result = await (await getPool()).query(
       `
           INSERT INTO FOREST_ACCESS (
-            USER_IDUSER,
+            user_id,
             OBJECTIVE,
             OTHER,
             FOREST_DETAIL_ID
@@ -39,7 +39,7 @@ const postRegisterforest = async row => {
             ?
           );
         `,
-      [row.USER_IDUSER, row.OBJECTIVE, row.OTHER, row.FOREST_DETAIL_ID]
+      [row.user_id, row.OBJECTIVE, row.OTHER, row.FOREST_DETAIL_ID]
     );
   } catch (e) {
     throw e;

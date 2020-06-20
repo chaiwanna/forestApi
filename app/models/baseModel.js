@@ -52,18 +52,45 @@ class baseModel {
     return result;
   }
 
-  // async update(id) {
+  async update(id, param) {
+    let result;
+    let value = [];
+    let head = [];
 
-  // }
+    this.table_col.forEach(element => {
+      param[element] ? head.push(element) : null;
+      param[element] ? value.push(param[element]) : null;
+    });
 
-  // async delete(id) {
+    let query = `UPDATE  ${this.table_name} SET `;
+    for (const key in head) {
+      console.log(` ${head[key]}=${value[key]} `);
+      query += ` ${head[key]}=${value[key]} `;
+    }
+    query += `WHERE id = ${id}`;
+    try {
+      result = await (await getPool()).query(query);
+    } catch (e) {
+      throw e;
+    }
 
-  // }
+    return result;
+  }
+
+  async delete(id) {
+    let result;
+    let query = `DELETE FROM ${this.table_name} WHERE id = ${id}`;
+    try {
+      result = await (await getPool()).query(query);
+    } catch (e) {
+      throw e;
+    }
+
+    return result;
+  }
   async customQuery(select, condition) {
     let result;
     let query = `SELECT ${select.join()} FROM ${this.table_name} ${condition}`;
-    console.log(query);
-
     try {
       result = await (await getPool()).query(query);
     } catch (e) {

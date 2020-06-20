@@ -28,6 +28,36 @@ const login = async (req, res) => {
       ipAddress: getIPAddress(req)
     });
 
+    return handleSuccess(res, 'เข้าสู่ระบบสำเร็จ', result);
+  } catch (e) {
+    //moduleLogger.error({ e }, 'Login failed');
+    return handleCustomValidationError(res, [
+      {
+        value: '',
+        msg: e.message,
+        param: 'general',
+        location: 'body'
+      }
+    ]);
+  }
+};
+
+const loginWithHash = async (req, res) => {
+  const validationResponse = handleValidationError(req, res);
+  if (validationResponse !== null) {
+    return validationResponse;
+  }
+
+  const userRoles =
+    req.params.roleType === 'staff'
+      ? [userModel.userRole.administrator, userModel.userRole.staff]
+      : [userModel.userRole.user];
+
+  try {
+    const result = await authModel.loginWithHash(req.body.username, req.body.password, userRoles, {
+      ipAddress: getIPAddress(req)
+    });
+
     return handleSuccess(res, 'You are successfully logged in.', result);
   } catch (e) {
     //moduleLogger.error({ e }, 'Login failed');
@@ -185,5 +215,6 @@ module.exports = {
   registerConfirm,
   passwordResetRequest,
   passwordResetVerify,
-  passwordReset
+  passwordReset,
+  loginWithHash
 };
